@@ -229,3 +229,64 @@ redo_calibration_curve = function(){
 toc_samples %>% 
   arrange(as.numeric(name)) %>% 
   write.csv("data/processed/toc_tn_processed.csv", row.names = FALSE)
+
+
+#
+#
+
+# PART II: IRMS results ---------------------------------------------------
+
+## import ----
+import_irms_data = function(FILEPATH){
+  
+  headers <- read.csv(FILEPATH, skip = 3, nrows=2, header=FALSE)
+  headers_names <- sapply(headers,paste,collapse="_")
+  
+  data <- read.csv(FILEPATH, skip = 5, header=FALSE)
+  names(data) <- headers_names  
+  
+  data
+}
+irms_data = import_irms_data(FILEPATH = "data/toc/S19S_irms.csv")
+
+#
+## process irms data ----
+irms_data_processed = 
+  irms_data %>% 
+  janitor::clean_names() %>% 
+  dplyr::select(id, name, sample_group, d15n_air, d13c_vpdb) %>% 
+  mutate_at(vars(starts_with(c("d13c", "d15n"))), as.numeric)
+
+irms_samples = 
+  irms_data_processed %>% 
+  filter(sample_group == "samples") %>% 
+  group_by(name) %>% 
+  mutate(keep = id == max(id)) %>% 
+  ungroup() %>% 
+  filter(keep) %>% 
+  dplyr::select(-keep) %>% 
+  mutate(name = as.character(as.numeric(name))) %>% 
+  filter(!is.na(name))
+
+
+## QA-QC ----
+
+### replicates
+
+reps_irms = 
+  irms_data_processed %>% 
+  dplyr::select(name, d13c_vpdb, d15n_air) %>% 
+  filter(grepl("rep", name)) %>% 
+  mutate(name = str_remove(name, "-rep")) %>% 
+  rename(rep_d13c = d13c_vpdb,
+         rep_d15n = d15n_air) %>% 
+  left_join(irms_samples %>% dplyr::select(name, d13c_vpdb, d15n_air)) %>% 
+  dplyr::select(name, contains("d13c"), contains("d15n"), everything()) %>% 
+  rowwise() %>% 
+  mutate(mean_d13c = mean(c(rep_d13c, d13c_vpdb)),
+         sd_d13c = round(sd(c(rep_d13c, d13c_vpdb)),3),
+         cv_d13c = round(sd_d13c/mean_d13c,3),
+         
+         mean_d15n = mean(c(rep_d15n, d15n_air)),
+         sd_d15n = round(sd(c(rep_d15n, d15n_air)),3),
+         cv_d15n = round(sd_d15n/mean_d15n,3))
