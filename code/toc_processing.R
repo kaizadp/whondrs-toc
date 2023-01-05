@@ -41,6 +41,9 @@ toc_processed =
                 memo, date_started, run_number) %>% 
   # remove samples with oxygen breakthrough ("bl") - these have been repeated
   filter(!info %in% "bl") %>% 
+  # this initial dataset was run in December, and we do not want to include the more recent results;
+  # those will be run under toc_redo, see below.
+  filter(date_started < as.Date("2022-12-01")) %>% 
   force()
 
 ## samples
@@ -56,7 +59,7 @@ toc_samples =
   group_by(name) %>% 
   dplyr::mutate(keep = date_started == max(date_started)) %>% 
   filter(keep) %>% 
-  dplyr::select(-date_started, -keep) %>% 
+  dplyr::select(-keep) %>% 
   arrange(as.numeric(name))
 
 
@@ -225,14 +228,84 @@ redo_calibration_curve = function(){
     geom_point()+
     geom_smooth(method = "lm")
 }
+## TOC-redo ----
+## Some samples were re-run in December 2022, in triplicate.
+## These are processed below.
+## KFP, 2023-01-04
+
+toc_redo = read.csv("data/toc/S19S_toc_redo.csv") %>% janitor::clean_names()
+
+toc_redo_processed = 
+  toc_redo %>% 
+  rename(n_percent = n,
+         c_percent = c) %>% 
+  mutate(date_time = lubridate::mdy_hm(date_time),
+         date_started = case_when(name == "runin" ~ lubridate::as_date(date_time))) %>% 
+  fill(date_started) %>% 
+  group_by(date_started) %>% 
+  mutate(run_number = cur_group_id()) %>% 
+  ungroup() %>% 
+  dplyr::select(info, name, weight_mg, 
+                n_area, n_percent, n_factor, 
+                c_area, c_percent, c_factor, 
+                memo, date_started, run_number) %>% 
+  # remove samples with oxygen breakthrough ("bl") - these have been repeated
+  filter(!info %in% "bl") %>% 
+  force()
+
+## samples
+toc_redo_samples = 
+  toc_redo_processed %>% 
+  mutate(name = as.numeric(name),
+         name = as.character(name)) %>% 
+  filter(!is.na(name)) %>% 
+  dplyr::select(name, c_percent, n_percent, date_started) %>% 
+  rename(toc_percent = c_percent,
+         tn_percent = n_percent) %>% 
+  # some samples were re-run, so we want only the most recent ones
+  group_by(name) %>% 
+  dplyr::mutate(keep = date_started == max(date_started)) %>% 
+  filter(keep) %>% 
+  dplyr::select(-keep) %>% 
+  arrange(as.numeric(name))
+
+toc_redo_samples_qaqc = 
+  toc_redo_samples %>% 
+  group_by(name) %>% 
+  dplyr::summarise(toc_cv = 100 * sd(toc_percent)/mean(toc_percent),
+                   tn_cv = 100 * sd(tn_percent)/mean(tn_percent))
+
+toc_redo_samples_mean = 
+  toc_redo_samples %>% 
+  group_by(name, date_started) %>% 
+  dplyr::summarise(toc_percent = round(mean(toc_percent), 2),
+                   tn_percent = round(mean(tn_percent),2))
+
+
+## Now, combine the original and the redo samples
+
+toc_all_samples = 
+  toc_samples %>% 
+  rbind(toc_redo_samples_mean) %>% 
+  group_by(name) %>% 
+  # keep only the most recent sample
+  dplyr::mutate(keep = date_started == max(date_started)) %>% 
+  filter(keep) %>% 
+  dplyr::select(-keep) %>% 
+  rename(date_run = date_started) %>% 
+  arrange(as.numeric(name))
+
+
+#
 ## export TOC and TN data ----
-toc_samples %>% 
+toc_all_samples %>% 
   arrange(as.numeric(name)) %>% 
-  write.csv("data/processed/toc_tn_processed.csv", row.names = FALSE)
+  write.csv("data/processed/toc_tn_processed_2022-01-04.csv", row.names = FALSE)
 
 
 #
 #
+
 
 # PART II: IRMS results ---------------------------------------------------
 
