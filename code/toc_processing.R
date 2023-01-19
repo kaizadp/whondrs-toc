@@ -311,35 +311,48 @@ toc_all_samples %>%
 
 ## import ----
 import_irms_data = function(FILEPATH){
+  filePaths_irms <- list.files(path = FILEPATH, pattern = c("irms", "csv"), full.names = TRUE)
   
-  headers <- read.csv(FILEPATH, skip = 3, nrows=2, header=FALSE)
+  # the headers are split across 2 rows, so we need to first combine them,
+  # and then apply them to the dataframe
+  headers <- do.call(bind_rows, lapply(filePaths_irms, function(path) {
+    df <- read.csv(path, skip = 3, nrows = 2, header=FALSE, check.names = F)
+    df})) %>% head(2)
   headers_names <- sapply(headers,paste,collapse="_")
   
-  data <- read.csv(FILEPATH, skip = 5, header=FALSE)
-  names(data) <- headers_names  
-  
+  data <- do.call(bind_rows, lapply(filePaths_irms, function(path) {
+    df <- read.csv(path, skip = 5, header=FALSE, check.names = F)
+    names(df) <- headers_names  
+    df %>% mutate(source = path)
+  }))
   data
 }
-irms_data = import_irms_data(FILEPATH = "data/toc/S19S_irms.csv")
+irms_data = import_irms_data(FILEPATH = "data/toc")
 
 #
 ## process irms data ----
 irms_data_processed = 
   irms_data %>% 
   janitor::clean_names() %>% 
-  dplyr::select(id, name, sample_group, d15n_air, d13c_vpdb) %>% 
+  mutate(date = str_extract(source, "2022-[0-9]{2}-[0-9]{2}"),
+         date = lubridate::ymd(date)) %>% 
+  dplyr::select(id, name, sample_group, d15n_air, d13c_vpdb, date) %>% 
   mutate_at(vars(starts_with(c("d13c", "d15n"))), as.numeric)
 
-irms_samples = 
+irms_samples_all = 
   irms_data_processed %>% 
-  filter(sample_group == "samples") %>% 
+  filter(sample_group == "samples") 
+
+irms_samples_filtered = 
+  irms_samples_all %>% 
   group_by(name) %>% 
   mutate(keep = id == max(id)) %>% 
   ungroup() %>% 
   filter(keep) %>% 
   dplyr::select(-keep) %>% 
   mutate(name = as.character(as.numeric(name))) %>% 
-  filter(!is.na(name))
+  filter(!is.na(name)) %>% 
+  dplyr::select(-sample_group, -id)
 
 
 ## QA-QC ----
@@ -348,12 +361,12 @@ irms_samples =
 
 reps_irms = 
   irms_data_processed %>% 
-  dplyr::select(name, d13c_vpdb, d15n_air) %>% 
+  dplyr::select(name, date, d13c_vpdb, d15n_air) %>% 
   filter(grepl("rep", name)) %>% 
   mutate(name = str_remove(name, "-rep")) %>% 
   rename(rep_d13c = d13c_vpdb,
          rep_d15n = d15n_air) %>% 
-  left_join(irms_samples %>% dplyr::select(name, d13c_vpdb, d15n_air)) %>% 
+  left_join(irms_samples_all %>% dplyr::select(name, date, d13c_vpdb, d15n_air)) %>% 
   dplyr::select(name, contains("d13c"), contains("d15n"), everything()) %>% 
   rowwise() %>% 
   mutate(mean_d13c = mean(c(rep_d13c, d13c_vpdb)),
