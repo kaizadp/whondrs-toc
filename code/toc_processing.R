@@ -341,7 +341,11 @@ irms_data_processed =
 
 irms_samples_all = 
   irms_data_processed %>% 
-  filter(sample_group == "samples") 
+  filter(grepl("sample", sample_group)) %>% 
+  mutate(d15n_air = case_when(sample_group == "samples-C" ~ NA_real_,
+                              TRUE ~ d15n_air),
+         d13c_vpdb = case_when(sample_group == "samples-N" ~ NA_real_,
+                              TRUE ~ d13c_vpdb))
 
 irms_samples_filtered = 
   irms_samples_all %>% 
@@ -358,21 +362,30 @@ irms_samples_filtered =
 ## QA-QC ----
 
 ### replicates
+# because the δ values are positive as well as negative, the CV calculation does not make sense
+# therefore we calculate just the mean and SD here, not the CV
 
 reps_irms = 
-  irms_data_processed %>% 
+  irms_samples_all %>% 
   dplyr::select(name, date, d13c_vpdb, d15n_air) %>% 
   filter(grepl("rep", name)) %>% 
   mutate(name = str_remove(name, "-rep")) %>% 
   rename(rep_d13c = d13c_vpdb,
          rep_d15n = d15n_air) %>% 
-  left_join(irms_samples_all %>% dplyr::select(name, date, d13c_vpdb, d15n_air)) %>% 
+  left_join(irms_samples_filtered %>% dplyr::select(name, date, d13c_vpdb, d15n_air)) %>% 
   dplyr::select(name, contains("d13c"), contains("d15n"), everything()) %>% 
   rowwise() %>% 
   mutate(mean_d13c = mean(c(rep_d13c, d13c_vpdb)),
          sd_d13c = round(sd(c(rep_d13c, d13c_vpdb)),3),
-         cv_d13c = round(sd_d13c/mean_d13c,3),
+         #cv_d13c = round(sd_d13c/mean_d13c,3),
          
          mean_d15n = mean(c(rep_d15n, d15n_air)),
          sd_d15n = round(sd(c(rep_d15n, d15n_air)),3),
-         cv_d15n = round(sd_d15n/mean_d15n,3))
+         #cv_d15n = round(sd_d15n/mean_d15n,3)
+         )
+
+# export ----
+irms_samples_filtered %>% 
+  arrange(as.numeric(name)) %>% 
+  write.csv("data/processed/irms_processed_2023-02-17.csv", row.names = FALSE)
+
