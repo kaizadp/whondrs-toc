@@ -82,43 +82,37 @@ blanks %>%
 
 
 ### 2. reps
-reps_c = 
-toc_samples %>% 
-  group_by(Parent_ID) %>% 
-  summarise(mean = mean(c(rep, toc_percent)),
-            sd = round(sd(c(rep, toc_percent)),3),
-            cv = round(sd/mean,3))
 
-
-reps_c = 
+reps_c_analytical = 
   toc_processed %>% 
   dplyr::select(name, c_percent) %>% 
   filter(grepl("rep", name)) %>% 
   mutate(name = str_remove(name, "-rep")) %>% 
   rename(rep = c_percent) %>% 
-  left_join(toc_samples %>% dplyr::select(name, toc_percent)) %>% 
+  left_join(toc_processed %>% dplyr::select(name, c_percent)) %>% 
   rowwise() %>% 
-  mutate(mean = mean(c(rep, toc_percent)),
-         sd = round(sd(c(rep, toc_percent)),3),
+  mutate(mean = mean(c(rep, c_percent)),
+         sd = round(sd(c(rep, c_percent)),3),
          cv = round(sd/mean,3))
 
-reps_n = 
+
+reps_n_analytical = 
   toc_processed %>% 
   dplyr::select(name, n_percent) %>% 
   filter(grepl("rep", name)) %>% 
   mutate(name = str_remove(name, "-rep")) %>% 
   rename(rep = n_percent) %>% 
-  left_join(toc_samples %>% dplyr::select(name, tn_percent)) %>% 
+  left_join(toc_processed %>% dplyr::select(name, n_percent)) %>% 
   rowwise() %>% 
-  mutate(mean = mean(c(rep, tn_percent)),
-         sd = round(sd(c(rep, tn_percent)),3),
+  mutate(mean = mean(c(rep, n_percent)),
+         sd = round(sd(c(rep, n_percent)),3),
          cv = round(sd/mean,3))
 
-reps_c %>% 
+reps_c_analytical %>% 
   ggplot(aes(x = cv))+
   geom_histogram()
 
-reps_n %>% 
+reps_n_analytical %>% 
   ggplot(aes(x = cv))+
   geom_histogram()
 
@@ -141,8 +135,64 @@ aspartics %>%
   geom_jitter(width = 0.2)
 
 
+### 4. reps by site
+
+reps_c_by_site = 
+  toc_samples %>% 
+  group_by(Parent_ID) %>% 
+  summarise(mean = mean(toc_percent),
+            sd = round(sd(toc_percent),3),
+            cv = round(sd/mean,3))
+
+reps_c_by_site %>% 
+  ggplot(aes(x = cv))+
+  geom_histogram()
+
+reps_n_by_site = 
+  toc_samples %>% 
+  group_by(Parent_ID) %>% 
+  summarise(mean = mean(tn_percent),
+            sd = round(sd(tn_percent),3),
+            cv = round(sd/mean,3))
+
+reps_n_by_site %>% 
+  ggplot(aes(x = cv))+
+  geom_histogram()
+
+# # ggplot(data = toc_samples, aes(x = toc_percent)) +
+#   geom_histogram() +
+#   geom_vline(xintercept = c(0.45, 0.42, 0.59, 0.76, 1.19, 0.99, 0.21, 0.17, 0.18, 0.30, 0.51, 0.56, 0.23, 0.28))
+
+
+test2 <- ggplot(data = toc_samples, aes(x = toc_percent)) + 
+  geom_histogram(binwidth = 0.05, fill = "lightblue", color = "black", alpha = 0.7) + 
+  geom_vline(xintercept = c(0.45, 0.42, 0.59, 0.76, 1.19, 0.99, 0.21, 0.17, 0.18, 0.30, 0.51, 0.56, 0.23, 0.28), 
+             color = "red", linetype = "dashed", size = 0.7) + 
+  labs(x = "TOC Percent", y = "Frequency", title = "Distribution of TOC Percent") + 
+  theme_minimal() + 
+  theme(plot.title = element_text(hjust = 0.5, size = 16, face = "bold"), axis.text = element_text(size = 12), 
+        axis.title = element_text(size = 14, face = "bold"), legend.position = "none")
+
+
+test <- ggplot(data = toc_samples, aes(x = toc_percent)) +
+  geom_histogram(binwidth = 0.05, aes(fill = factor(Parent_ID)), color = "black", alpha = 0.7) + 
+  geom_vline(aes(xintercept = c(0.45, 0.42, 0.59, 0.76, 1.19, 0.99, 0.21, 0.17, 0.18, 0.30, 0.51, 0.56, 0.23, 0.28), 
+                 color = factor(Parent_ID)), linetype = "dashed", size = 0.7) + 
+  scale_fill_manual(values = '#CE0063') + # Apply custom colors 
+  scale_color_manual(values = '#FF5F13') + # Apply custom colors to vertical lines 
+  labs(x = "TOC Percent", y = "Frequency", title = "Distribution of TOC Percent by Sample Type") + 
+  theme_minimal() + theme(plot.title = element_text(hjust = 0.5, size = 16, face = "bold"), 
+                          axis.text = element_text(size = 12), axis.title = element_text(size = 14, face = "bold"), legend.position = "none")
+
+
+
+reps <- toc_samples %>% 
+  filter(grepl("SSS012|SSS001|SSS020|SSS030|SSS046", Parent_ID)) 
+
+ggplot(data = reps, aes(x = Parent_ID, y = toc_percent))+
+  geom_point()
 
 ## export
-toc_samples %>% write.csv("eca/processed/toc_eca_run1_2023-03-06.csv", row.names = F)
+toc_samples %>% write.csv("sss/processed/toc.csv", row.names = F)
 
 
