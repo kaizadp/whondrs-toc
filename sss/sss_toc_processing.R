@@ -16,14 +16,15 @@ library(readxl)
 # RUN-1 ONLY --------------------------------------------------------------
 ## running just one replicate from each set for a general understanding of C values
 
-toc_sss = read.csv("sss/toc/2023-01-05_whondrs_spatial.csv") %>% janitor::clean_names()
+#toc_sss = read.csv("2023-01-05_whondrs_spatial.csv") %>% janitor::clean_names()
+toc_sss = as.data.frame(X2023_01_05_whondrs_spatial) %>% janitor::clean_names()
 mapping = read_xlsx("C:/Users/guil098/OneDrive - PNNL/Data Generation and Files/ICON_ModEx_SSS/08_CN/01_RawData/20221101_Data_Raw_CN_SBR_RC2_SSS/20221101_Mapping_Raw_CN_SBR_RC2_SSS.xlsx")
 
 ## process toc data ----
 toc_processed = 
   toc_sss %>% 
-  rename(n_percent = n,
-         c_percent = c) %>% 
+  # rename(n_percent = n,
+  #        c_percent = c) %>% 
   dplyr::select(info, name, weight_mg, 
                 n_area, n_percent, n_factor, 
                 c_area, c_percent, c_factor, 
