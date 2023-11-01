@@ -49,7 +49,7 @@ toc_samples %>% write.csv("eca/processed/toc_eca_run1_2023-03-06.csv", row.names
 # RUN-2 ONLY --------------------------------------------------------------
 ## running just one replicate from each set for a general understanding of C values
 
-toc_run2 = read.csv("eca/toc_data/2023-02-21-stegen_eca_run1-contd.csv") %>% janitor::clean_names()
+toc_run2 = read.csv("toc_data/2023-02-21-stegen_eca_run1-contd.csv") %>% janitor::clean_names()
 
 ## process toc data ----
 toc_processed2 = 
@@ -78,5 +78,5 @@ toc_samples2 =
   arrange(as.numeric(name))
 
 ## export
-toc_samples2 %>% write.csv("eca/processed/toc_eca_run2_2023-11-01.csv", row.names = F)
+toc_samples2 %>% write.csv("processed/toc_eca_run2_2023-11-01.csv", row.names = F)
 
