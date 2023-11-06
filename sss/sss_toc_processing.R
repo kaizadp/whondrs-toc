@@ -16,15 +16,15 @@ library(readxl)
 # RUN-1 ONLY --------------------------------------------------------------
 ## running just one replicate from each set for a general understanding of C values
 
-#toc_sss = read.csv("2023-01-05_whondrs_spatial.csv") %>% janitor::clean_names()
-toc_sss = as.data.frame(X2023_01_05_whondrs_spatial) %>% janitor::clean_names()
+toc_sss = read.csv("toc/2023-01-05_whondrs_spatial.csv") %>% janitor::clean_names()
+#toc_sss = as.data.frame("2023_01_05_whondrs_spatial") %>% janitor::clean_names()
 mapping = read_xlsx("C:/Users/guil098/OneDrive - PNNL/Data Generation and Files/ICON_ModEx_SSS/08_CN/01_RawData/20221101_Data_Raw_CN_SBR_RC2_SSS/20221101_Mapping_Raw_CN_SBR_RC2_SSS.xlsx")
 
 ## process toc data ----
 toc_processed = 
   toc_sss %>% 
-  # rename(n_percent = n,
-  #        c_percent = c) %>% 
+   rename(n_percent = n,
+          c_percent = c) %>% 
   dplyr::select(info, name, weight_mg, 
                 n_area, n_percent, n_factor, 
                 c_area, c_percent, c_factor, 
@@ -165,7 +165,7 @@ reps_n_by_site %>%
 #   geom_vline(xintercept = c(0.45, 0.42, 0.59, 0.76, 1.19, 0.99, 0.21, 0.17, 0.18, 0.30, 0.51, 0.56, 0.23, 0.28))
 
 
-test2 <- ggplot(data = toc_samples, aes(x = toc_percent)) + 
+toc_distribution <- ggplot(data = toc_samples, aes(x = toc_percent)) + 
   geom_histogram(binwidth = 0.05, fill = "lightblue", color = "black", alpha = 0.7) + 
   geom_vline(xintercept = c(0.45, 0.42, 0.59, 0.76, 1.19, 0.99, 0.21, 0.17, 0.18, 0.30, 0.51, 0.56, 0.23, 0.28), 
              color = "red", linetype = "dashed", size = 0.7) + 
@@ -173,19 +173,6 @@ test2 <- ggplot(data = toc_samples, aes(x = toc_percent)) +
   theme_minimal() + 
   theme(plot.title = element_text(hjust = 0.5, size = 16, face = "bold"), axis.text = element_text(size = 12), 
         axis.title = element_text(size = 14, face = "bold"), legend.position = "none")
-
-
-test <- ggplot(data = toc_samples, aes(x = toc_percent)) +
-  geom_histogram(binwidth = 0.05, aes(fill = factor(Parent_ID)), color = "black", alpha = 0.7) + 
-  geom_vline(aes(xintercept = c(0.45, 0.42, 0.59, 0.76, 1.19, 0.99, 0.21, 0.17, 0.18, 0.30, 0.51, 0.56, 0.23, 0.28), 
-                 color = factor(Parent_ID)), linetype = "dashed", size = 0.7) + 
-  scale_fill_manual(values = '#CE0063') + # Apply custom colors 
-  scale_color_manual(values = '#FF5F13') + # Apply custom colors to vertical lines 
-  labs(x = "TOC Percent", y = "Frequency", title = "Distribution of TOC Percent by Sample Type") + 
-  theme_minimal() + theme(plot.title = element_text(hjust = 0.5, size = 16, face = "bold"), 
-                          axis.text = element_text(size = 12), axis.title = element_text(size = 14, face = "bold"), legend.position = "none")
-
-
 
 reps <- toc_samples %>% 
   filter(grepl("SSS012|SSS001|SSS020|SSS030|SSS046", Parent_ID)) 
