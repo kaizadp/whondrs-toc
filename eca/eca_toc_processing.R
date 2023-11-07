@@ -49,7 +49,10 @@ toc_samples %>% write.csv("eca/processed/toc_eca_run1_2023-03-06.csv", row.names
 # RUN-2 ONLY --------------------------------------------------------------
 ## running just one replicate from each set for a general understanding of C values
 
-toc_run2 = read.csv("toc_data/2023-02-21-stegen_eca_run1-contd.csv") %>% janitor::clean_names()
+toc_run2 = read.csv("toc_data/2023-02-21-stegen_eca_run1-contd.csv") %>% 
+  janitor::clean_names() %>% 
+  filter(!grepl("2/21/2023|2/22/2023|2/23/2023|2/24/2023", date_time)) 
+  
 
 ## process toc data ----
 toc_processed2 = 
@@ -68,9 +71,8 @@ toc_processed2 =
 ## samples
 toc_samples2 = 
   toc_processed2 %>% 
-  mutate(name = as.numeric(name),
-         name = as.character(name)) %>% 
-  filter(!is.na(name)) %>% 
+  filter(!is.na(name),
+         !grepl("runin|aspartic|MT|moran-LOW|moran-MED|moran-low|moran-med", name)) %>% 
   dplyr::select(name, c_percent, n_percent, memo) %>% 
   rename(toc_percent = c_percent,
          tn_percent = n_percent) %>% 
