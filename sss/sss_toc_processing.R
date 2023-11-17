@@ -35,6 +35,7 @@ toc_processed =
   force()
 
 ## samples
+
 toc_samples = 
   toc_processed %>% 
   filter(grepl("SSS", name),
@@ -47,7 +48,17 @@ toc_samples =
   select(Sample_ID, toc_percent, tn_percent, Randomized_ID) %>% 
   mutate(Parent_ID = str_extract(Randomized_ID, ".{6}(?=_)"))
 
+toc_samples_summary = 
+  toc_samples %>% 
+  group_by(Parent_ID) %>% 
+  dplyr::summarise(toc_percent = mean(toc_percent),
+                   tn_percent = mean(tn_percent),
+                   toc_percent = round(toc_percent, 2),
+                   tn_percent = round(tn_percent, 2),
+                   n = n()) %>% 
+  mutate(Method_Deviation = case_when(n == 3 ~ "CN_000", n == 1 ~ "N/A"))
 
+toc_samples_summary$Parent_ID <- paste0(toc_samples_summary$Parent_ID,"_SCN")
 
 ## QA-QC ----
 ### 1. blanks
@@ -160,10 +171,6 @@ reps_n_by_site %>%
   ggplot(aes(x = cv))+
   geom_histogram()
 
-# # ggplot(data = toc_samples, aes(x = toc_percent)) +
-#   geom_histogram() +
-#   geom_vline(xintercept = c(0.45, 0.42, 0.59, 0.76, 1.19, 0.99, 0.21, 0.17, 0.18, 0.30, 0.51, 0.56, 0.23, 0.28))
-
 
 toc_distribution <- ggplot(data = toc_samples, aes(x = toc_percent)) + 
   geom_histogram(binwidth = 0.05, fill = "lightblue", color = "black", alpha = 0.7) + 
@@ -177,10 +184,53 @@ toc_distribution <- ggplot(data = toc_samples, aes(x = toc_percent)) +
 reps <- toc_samples %>% 
   filter(grepl("SSS012|SSS001|SSS020|SSS030|SSS046", Parent_ID)) 
 
-ggplot(data = reps, aes(x = Parent_ID, y = toc_percent))+
+reps_plot <- ggplot(data = reps, aes(x = Parent_ID, y = toc_percent))+
   geom_point()
 
 ## export
 toc_samples %>% write.csv("sss/processed/toc.csv", row.names = F)
+
+
+#Data Package ----
+#ICON Data Package set, only publishing samples that dont need reruns. Remainder will be published in Jan. 2024 version.
+
+toc_dp <- toc_samples_summary %>% 
+  filter(!grepl("SSS001|SSS006|SSS025|SSS004|SSS023|SSS047|SSS016|SSS008", Parent_ID)) %>% #removing samples with any reps over 1 percent toc
+  select(Parent_ID, toc_percent, tn_percent, Method_Deviation) %>% 
+  mutate(Material = "Sediment") %>% 
+  relocate(Material, .after = Parent_ID) %>% 
+  rename(Sample_Name = Parent_ID,
+         '01395_C_percent_per_mg' = toc_percent,
+         '01397_N_percent_per_mg' = tn_percent,
+         Methods_Deviation = Method_Deviation) 
+  
+#formatted for data package file 
+toc_dp %>% write.csv("C:/Users/guil098/OneDrive - PNNL/Data Generation and Files/ICON_ModEx_SSS/08_CN/02_FormattedData/SSS_CN_ReadyForBoye_11-08-2023.csv", row.names = F)  
+  
+  
+  
+  
+  
+  
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
