@@ -10,13 +10,14 @@
 library(tidyverse)
 library(lubridate)
 library(readxl)
+library(viridis)
 
 
 
 # RUN-1 ONLY --------------------------------------------------------------
 ## running just one replicate from each set for a general understanding of C values
 
-toc_sss = read.csv("toc/2023-01-05_whondrs_spatial.csv") %>% janitor::clean_names()
+toc_sss = read.csv("toc/2023-01-05_whondrs_spatial-contd.csv") %>% janitor::clean_names()
 #toc_sss = as.data.frame("2023_01_05_whondrs_spatial") %>% janitor::clean_names()
 mapping = read_xlsx("C:/Users/guil098/OneDrive - PNNL/Data Generation and Files/ICON_ModEx_SSS/08_CN/01_RawData/20221101_Data_Raw_CN_SBR_RC2_SSS/20221101_Mapping_Raw_CN_SBR_RC2_SSS.xlsx")
 
@@ -56,7 +57,7 @@ toc_samples_summary =
                    toc_percent = round(toc_percent, 2),
                    tn_percent = round(tn_percent, 2),
                    n = n()) %>% 
-  mutate(Method_Deviation = case_when(n == 3 ~ "CN_000", n == 1 ~ "N/A"))
+  mutate(Method_Deviation = case_when(n >= 3 ~ "CN_000", n == 1 ~ "N/A"))
 
 toc_samples_summary$Parent_ID <- paste0(toc_samples_summary$Parent_ID,"_SCN")
 
@@ -172,20 +173,35 @@ reps_n_by_site %>%
   geom_histogram()
 
 
-toc_distribution <- ggplot(data = toc_samples, aes(x = toc_percent)) + 
-  geom_histogram(binwidth = 0.05, fill = "lightblue", color = "black", alpha = 0.7) + 
-  geom_vline(xintercept = c(0.45, 0.42, 0.59, 0.76, 1.19, 0.99, 0.21, 0.17, 0.18, 0.30, 0.51, 0.56, 0.23, 0.28), 
-             color = "red", linetype = "dashed", size = 0.7) + 
-  labs(x = "TOC Percent", y = "Frequency", title = "Distribution of TOC Percent") + 
-  theme_minimal() + 
-  theme(plot.title = element_text(hjust = 0.5, size = 16, face = "bold"), axis.text = element_text(size = 12), 
-        axis.title = element_text(size = 14, face = "bold"), legend.position = "none")
+highlighted_parent_ids <- c("SSS012", "SSS001", "SSS020", "SSS030", "SSS046", 
+                            "SSS006", "SSS025", "SSS004", "SSS023", "SSS047", 
+                            "SSS016", "SSS008")
 
-reps <- toc_samples %>% 
-  filter(grepl("SSS012|SSS001|SSS020|SSS030|SSS046", Parent_ID)) 
 
-reps_plot <- ggplot(data = reps, aes(x = Parent_ID, y = toc_percent))+
+toc_distribution <- ggplot(data = toc_samples, aes(x = toc_percent)) +
+  geom_histogram(binwidth = 0.05, fill = "lightblue", color = "black", alpha = 0.7) +
+  geom_vline(data = toc_samples[toc_samples$Parent_ID %in% highlighted_parent_ids, ],
+             aes(xintercept = toc_percent, color = Parent_ID), 
+             linetype = "dashed", size = 0.8) +
+  scale_color_manual(name = "Parent ID",
+                     values = c(SSS012 = "red", SSS001 = "blue", SSS020 = "green",
+                                SSS030 = "purple", SSS046 = "orange", SSS006 = "pink",
+                                SSS025 = "brown", SSS004 = "cyan", SSS023 = "gray",
+                                SSS047 = "violet", SSS016 = "yellow", SSS008 = "darkgreen")) +
+  labs(x = "TOC Percent", y = "Frequency", title = "Distribution of TOC Percent") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5, size = 16, face = "bold"), 
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14, face = "bold"))
+
+
+bio_reps <- toc_samples %>% 
+  filter(grepl("SSS012|SSS001|SSS020|SSS030|SSS046|SSS006|SSS025|SSS004|SSS023|SSS047|SSS016|SSS008", Parent_ID)) 
+
+bio_reps_plot <- ggplot(data = bio_reps, aes(x = Parent_ID, y = toc_percent))+
   geom_point()
+
+
 
 ## export
 toc_samples %>% write.csv("sss/processed/toc.csv", row.names = F)
