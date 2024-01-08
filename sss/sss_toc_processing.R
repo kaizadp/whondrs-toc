@@ -49,6 +49,25 @@ toc_samples =
   select(Sample_ID, toc_percent, tn_percent, Randomized_ID) %>% 
   mutate(Parent_ID = str_extract(Randomized_ID, ".{6}(?=_)"))
 
+### Running distance matrix to get the best 3 samples when samples have more than 3 samples ran for same Parent_ID 
+samples_to_use <- toc_samples %>%
+  group_by(Parent_ID) %>%
+  filter(n() > 3) %>%
+  ungroup() %>%
+  pull(Sample_ID)
+
+
+filtered_data <- toc_samples %>%
+  filter(Sample_ID %in% samples_to_use)
+
+distance_matrix <- dist(filtered_data[, c("toc_percent")])
+
+
+
+
+
+
+
 toc_samples_summary = 
   toc_samples %>% 
   group_by(Parent_ID) %>% 
@@ -60,6 +79,7 @@ toc_samples_summary =
   mutate(Method_Deviation = case_when(n >= 3 ~ "CN_000", n == 1 ~ "N/A"))
 
 toc_samples_summary$Parent_ID <- paste0(toc_samples_summary$Parent_ID,"_SCN")
+
 
 ## QA-QC ----
 ### 1. blanks
@@ -211,7 +231,7 @@ toc_samples %>% write.csv("sss/processed/toc.csv", row.names = F)
 #ICON Data Package set, only publishing samples that dont need reruns. Remainder will be published in Jan. 2024 version.
 
 toc_dp <- toc_samples_summary %>% 
-  filter(!grepl("SSS001|SSS006|SSS025|SSS004|SSS023|SSS047|SSS016|SSS008", Parent_ID)) %>% #removing samples with any reps over 1 percent toc
+  # filter(!grepl("SSS001|SSS006|SSS025|SSS004|SSS023|SSS047|SSS016|SSS008", Parent_ID)) %>% #removing samples with any reps over 1 percent toc
   select(Parent_ID, toc_percent, tn_percent, Method_Deviation) %>% 
   mutate(Material = "Sediment") %>% 
   relocate(Material, .after = Parent_ID) %>% 
