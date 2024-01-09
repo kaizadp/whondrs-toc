@@ -19,7 +19,8 @@ library(viridis)
 
 toc_sss = read.csv("toc/2023-01-05_whondrs_spatial-contd.csv") %>% janitor::clean_names()
 #toc_sss = as.data.frame("2023_01_05_whondrs_spatial") %>% janitor::clean_names()
-mapping = read_xlsx("C:/Users/guil098/OneDrive - PNNL/Data Generation and Files/ICON_ModEx_SSS/08_CN/01_RawData/20221101_Data_Raw_CN_SBR_RC2_SSS/20221101_Mapping_Raw_CN_SBR_RC2_SSS.xlsx")
+#mapping = read_xlsx("C:/Users/guil098/OneDrive - PNNL/Data Generation and Files/ICON_ModEx_SSS/08_CN/01_RawData/20221101_Data_Raw_CN_SBR_RC2_SSS/20221101_Mapping_Raw_CN_SBR_RC2_SSS.xlsx")
+mapping = read_xlsx("C:/Users/laan208/PNNL/Core Richland and Sequim Lab-Field Team - Documents/Data Generation and Files/ICON_ModEx_SSS/08_CN/01_RawData/20221101_Data_Raw_CN_SBR_RC2_SSS/20221101_Mapping_Raw_CN_SBR_RC2_SSS.xlsx")
 
 ## process toc data ----
 toc_processed = 
@@ -48,6 +49,105 @@ toc_samples =
   left_join(mapping, by = c('Sample_ID')) %>% 
   select(Sample_ID, toc_percent, tn_percent, Randomized_ID) %>% 
   mutate(Parent_ID = str_extract(Randomized_ID, ".{6}(?=_)"))
+
+
+### Maggi Dist Matrix ####
+
+#calculate mean and cv for replicate samples
+outliers <- toc_samples %>% 
+  group_by(Parent_ID) %>% 
+  mutate(mean_toc_all = mean(toc_percent)) %>% 
+  mutate(cv_toc_all = (sd(toc_percent)/mean(toc_percent))*100) %>% 
+  filter(n() > 1) %>% 
+  ungroup() 
+
+outliers$flag <- NA
+
+#make final data frame
+toc_final <- as.data.frame(matrix(NA, ncol = 10, nrow = 1))
+
+colnames(toc_final) = c("toc.temp", "Sample_ID",  "tn_percent", "Randomized_ID", "Parent_ID", "mean_toc_all", "cv_toc_all", "mean_toc_rem", "cv_toc_rem", "flag")
+
+#Number of unique parent IDs with replicates to loop through
+unique.samples = unique(outliers$Parent_ID)
+
+for (i in 1:length(unique.samples)) {
+  
+  ## Subset replicates
+  data_subset = subset(outliers, outliers$Parent_ID == unique.samples[i])
+  
+  ## Pull out Rate values
+  toc.temp = as.numeric(data_subset$toc_percent)
+  
+  ## Calculate standard deviation, average, and coefficient of variation of rates
+  toc.temp.sd <- sd(toc.temp)
+  toc.temp.mean <- mean(toc.temp)
+  CV = abs((toc.temp.sd/toc.temp.mean)*100)
+  
+  #looping to get 3 best samples
+  for (sample.reduction in 1:5)  {
+    
+    if (length(toc.temp) > 3) {
+      
+      dist.temp = as.matrix(abs(dist(toc.temp)))
+      dist.comp = numeric() 
+      
+      for(toc.now in 1:ncol(dist.temp)) {
+        
+        dist.comp = rbind(dist.comp,c(toc.now,sum(dist.temp[,toc.now])))
+        
+      }
+      
+      dist.comp[,2] = as.numeric(dist.comp[,2])
+      toc.temp = toc.temp[-which.max(dist.comp[,2])]
+      
+      toc.temp.sd <- sd(toc.temp)
+      toc.temp.mean <- mean(toc.temp)
+      toc.temp.cv <- abs((toc.temp.sd/toc.temp.mean)*100)
+      CV = toc.temp.cv
+      toc.temp.range <- max(toc.temp) - min(toc.temp)
+      range = toc.temp.range
+      
+    } 
+  }
+  
+  if (length(toc.temp) >= 3) {
+    
+    toc.combined <- as.data.frame(toc.temp)
+    
+    toc.removed <- merge(toc.combined, data_subset, by.x = "toc.temp", by.y = "toc_percent", all.x = TRUE)
+    
+    toc.removed <- toc.removed[!duplicated(toc.removed$Sample_ID), ]
+    
+    toc.removed$cv_toc_rem = as.numeric(abs((sd(toc.temp)/mean(toc.temp))*100))
+    
+    toc.removed$mean_toc_rem = as.numeric(mean(toc.temp))
+    
+  }
+  
+  toc_final = rbind(toc.removed, toc_final)
+  
+  rm('toc.temp')
+}
+
+## This data frame has removed samples
+toc_final_flag <- toc_final %>% 
+  mutate(flag = if_else(cv_toc_all < cv_toc_rem, "Issue in dropping sample", "N/A")) %>% 
+  rename(toc_percent = toc.temp) 
+
+### End Sample Removal ####
+
+## Joined to see what sample is being removed
+
+toc_merged_removals <- left_join(outliers, toc_final_flag, by = c("Sample_ID", "Randomized_ID", "tn_percent", "Parent_ID", "mean_toc_all", "cv_toc_all")) %>% 
+  mutate(flag_removal = if_else(is.na(toc_percent.y), "Outlier to remove", "N/A")) %>% 
+  left_join(toc_samples, by = c("Sample_ID", "Randomized_ID", "tn_percent", "Parent_ID")) %>% 
+  mutate(toc_percent = ifelse(flag_removal == "Outlier to remove", "N/A", toc_percent.x)) %>% 
+  select(-c(flag.x, flag.y, toc_percent.x, toc_percent.y)) %>% 
+  relocate(toc_percent, .after = Sample_ID)
+
+
+
 
 ### Running distance matrix to get the best 3 samples when samples have more than 3 samples ran for same Parent_ID 
 samples_to_use <- toc_samples %>%
