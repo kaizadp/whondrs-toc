@@ -19,8 +19,8 @@ library(viridis)
 
 toc_sss = read.csv("toc/2023-01-05_whondrs_spatial-contd.csv") %>% janitor::clean_names()
 #toc_sss = as.data.frame("2023_01_05_whondrs_spatial") %>% janitor::clean_names()
-#mapping = read_xlsx("C:/Users/guil098/OneDrive - PNNL/Data Generation and Files/ICON_ModEx_SSS/08_CN/01_RawData/20221101_Data_Raw_CN_SBR_RC2_SSS/20221101_Mapping_Raw_CN_SBR_RC2_SSS.xlsx")
-mapping = read_xlsx("C:/Users/laan208/PNNL/Core Richland and Sequim Lab-Field Team - Documents/Data Generation and Files/ICON_ModEx_SSS/08_CN/01_RawData/20221101_Data_Raw_CN_SBR_RC2_SSS/20221101_Mapping_Raw_CN_SBR_RC2_SSS.xlsx")
+mapping = read_xlsx("C:/Users/guil098/OneDrive - PNNL/Data Generation and Files/ICON_ModEx_SSS/08_CN/01_RawData/20221101_Data_Raw_CN_SBR_RC2_SSS/20221101_Mapping_Raw_CN_SBR_RC2_SSS.xlsx")
+#mapping = read_xlsx("C:/Users/laan208/PNNL/Core Richland and Sequim Lab-Field Team - Documents/Data Generation and Files/ICON_ModEx_SSS/08_CN/01_RawData/20221101_Data_Raw_CN_SBR_RC2_SSS/20221101_Mapping_Raw_CN_SBR_RC2_SSS.xlsx")
 
 ## process toc data ----
 toc_processed = 
@@ -51,6 +51,14 @@ toc_samples =
   mutate(Parent_ID = str_extract(Randomized_ID, ".{6}(?=_)"))
 
 
+toc_samples_singles =
+  toc_samples %>% 
+  group_by(Parent_ID) %>% 
+  filter(n()== 1) %>% 
+  select(c(Parent_ID, toc_percent, tn_percent)) %>% 
+  mutate(Method_Deviation = "N/A")
+
+
 ### Maggi Dist Matrix ####
 
 #calculate mean and cv for replicate samples
@@ -76,7 +84,7 @@ for (i in 1:length(unique.samples)) {
   ## Subset replicates
   data_subset = subset(outliers, outliers$Parent_ID == unique.samples[i])
   
-  ## Pull out Rate values
+  ## Pull out toc percent values
   toc.temp = as.numeric(data_subset$toc_percent)
   
   ## Calculate standard deviation, average, and coefficient of variation of rates
@@ -147,38 +155,23 @@ toc_merged_removals <- left_join(outliers, toc_final_flag, by = c("Sample_ID", "
   relocate(toc_percent, .after = Sample_ID)
 
 
-
-
-### Running distance matrix to get the best 3 samples when samples have more than 3 samples ran for same Parent_ID 
-samples_to_use <- toc_samples %>%
-  group_by(Parent_ID) %>%
-  filter(n() > 3) %>%
-  ungroup() %>%
-  pull(Sample_ID)
-
-
-filtered_data <- toc_samples %>%
-  filter(Sample_ID %in% samples_to_use)
-
-distance_matrix <- dist(filtered_data[, c("toc_percent")])
-
-
-
-
-
-
-
-toc_samples_summary = 
-  toc_samples %>% 
+clean_replicates <- 
+  toc_merged_removals %>% 
+  filter(flag_removal == "N/A") %>% 
   group_by(Parent_ID) %>% 
+  mutate(toc_percent = as.numeric(toc_percent)) %>% 
   dplyr::summarise(toc_percent = mean(toc_percent),
                    tn_percent = mean(tn_percent),
                    toc_percent = round(toc_percent, 2),
                    tn_percent = round(tn_percent, 2),
                    n = n()) %>% 
-  mutate(Method_Deviation = case_when(n >= 3 ~ "CN_000", n == 1 ~ "N/A"))
+  mutate(Method_Deviation = case_when(n >= 3 ~ "CN_000", n == 1 ~ "N/A")) %>% 
+  select(c(Parent_ID, toc_percent, tn_percent, Method_Deviation))
 
-toc_samples_summary$Parent_ID <- paste0(toc_samples_summary$Parent_ID,"_SCN")
+toc_final_samples <- 
+  rbind(clean_replicates, toc_samples_singles)
+
+toc_final_samples$Parent_ID <- paste0(toc_final_samples$Parent_ID,"_SCN")
 
 
 ## QA-QC ----
@@ -330,7 +323,7 @@ toc_samples %>% write.csv("sss/processed/toc.csv", row.names = F)
 #Data Package ----
 #ICON Data Package set, only publishing samples that dont need reruns. Remainder will be published in Jan. 2024 version.
 
-toc_dp <- toc_samples_summary %>% 
+toc_dp <- toc_final_samples %>% 
   # filter(!grepl("SSS001|SSS006|SSS025|SSS004|SSS023|SSS047|SSS016|SSS008", Parent_ID)) %>% #removing samples with any reps over 1 percent toc
   select(Parent_ID, toc_percent, tn_percent, Method_Deviation) %>% 
   mutate(Material = "Sediment") %>% 
@@ -341,7 +334,7 @@ toc_dp <- toc_samples_summary %>%
          Methods_Deviation = Method_Deviation) 
   
 #formatted for data package file 
-toc_dp %>% write.csv("C:/Users/guil098/OneDrive - PNNL/Data Generation and Files/ICON_ModEx_SSS/08_CN/02_FormattedData/SSS_CN_ReadyForBoye_11-08-2023.csv", row.names = F)  
+toc_dp %>% write.csv("C:/Users/guil098/OneDrive - PNNL/Data Generation and Files/ICON_ModEx_SSS/08_CN/02_FormattedData/SSS_CN_ReadyForBoye_01-12-2024.csv", row.names = F)  
   
   
   
