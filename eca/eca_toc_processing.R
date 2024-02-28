@@ -171,18 +171,128 @@ toc_samples4 =
          tn_percent = n_percent,
          randomized_id = name) 
 
-full_toc <- bind_rows(toc_samples3, toc_samples4)
+full_sample_toc <- bind_rows(toc_samples3, toc_samples4)
 
-#joining mapping with batch 2 run
+#joining mapping with both runs
 toc_mapping <- full_mapping %>% 
-  full_join(full_toc) %>% 
+  full_join(full_sample_toc) %>% 
   filter(!is.na(toc_percent)) %>% 
   select(sample_id, randomized_id, cn_notes, parent_id, toc_percent, tn_percent, memo)
 
 
+# QAQC --------------------------------------------------------------
+full_processed_toc <- bind_rows(toc_processed3, toc_processed4)
+
+### 1. blanks  ----
+blanks = 
+  full_processed_toc %>% 
+  dplyr::select(name, c_area, c_percent, n_area, n_percent, memo) %>% 
+  filter(grepl("MT", name, ignore.case = TRUE)) 
+
+# blanks for C
+blanks %>% 
+  ggplot(aes(x = "blank", y = c_percent)) + 
+  geom_violin()+
+  geom_jitter(width = 0.1)
+
+blanks %>% 
+  ggplot(aes(x = "blank", y = c_area)) + 
+  geom_violin()+
+  geom_jitter(width = 0.1)
 
 
+# blanks for N
+blanks %>% 
+  filter(n_area < 2000) %>% 
+  ggplot(aes(x = "blank", y = n_percent)) + 
+  geom_violin()+
+  geom_jitter(width = 0.1)
+
+blanks %>% 
+  filter(n_area < 2000) %>% 
+  ggplot(aes(x = "blank", y = n_area)) + 
+  geom_violin()+
+  geom_jitter(width = 0.1)
 
 
+### 2. reps ----
 
+reps_c_analytical = 
+  full_processed_toc %>% 
+  dplyr::select(name, c_percent) %>% 
+  filter(grepl("rep", name)) %>% 
+  mutate(name = str_remove(name, "-rep")) %>% 
+  rename(rep = c_percent) %>% 
+  left_join(full_processed_toc %>% dplyr::select(name, c_percent)) %>% 
+  rowwise() %>% 
+  mutate(mean = mean(c(rep, c_percent)),
+         sd = round(sd(c(rep, c_percent)),3),
+         cv = round(sd/mean,3))
+
+
+reps_n_analytical = 
+  full_processed_toc %>% 
+  dplyr::select(name, n_percent) %>% 
+  filter(grepl("rep", name)) %>% 
+  mutate(name = str_remove(name, "-rep")) %>% 
+  rename(rep = n_percent) %>% 
+  left_join(full_processed_toc %>% dplyr::select(name, n_percent)) %>% 
+  rowwise() %>% 
+  mutate(mean = mean(c(rep, n_percent)),
+         sd = round(sd(c(rep, n_percent)),3),
+         cv = round(sd/mean,3))
+
+reps_c_analytical %>% 
+  ggplot(aes(x = cv))+
+  geom_histogram()
+
+reps_n_analytical %>% 
+  ggplot(aes(x = cv))+
+  geom_histogram()
+
+
+### 3. aspartics/standards ----
+aspartics = 
+  full_processed_toc %>% 
+  filter(grepl("aspartic", name))
+
+aspartics %>% 
+  filter(weight_mg > 0.4 & weight_mg < 0.65) %>% 
+  ggplot(aes(y = c_factor, x = "aspartic"))+
+  geom_violin()+
+  geom_jitter(width = 0.2)
+
+aspartics %>% 
+  filter(weight_mg > 0.4 & weight_mg < 0.65) %>% 
+  ggplot(aes(y = n_factor, x = "aspartic"))+
+  geom_violin()+
+  geom_jitter(width = 0.2)
+
+
+### 4. reps by site ----
+
+reps_c_by_site = 
+  toc_mapping %>% 
+  mutate(treat = case_when(grepl("W",sample_id)~"Wet",
+                            grepl("D", sample_id) ~"Dry")) %>% 
+  filter(!grepl("rerunning for TN only|power bump", cn_notes)) %>% 
+  group_by(parent_id, treat) %>% 
+  summarise(mean = mean(toc_percent),
+            sd = round(sd(toc_percent),3),
+            cv = round(sd/mean,3))
+
+reps_c_by_site %>% 
+  ggplot(aes(x = cv))+
+  geom_histogram()
+
+reps_n_by_site = 
+  toc_mapping  %>% 
+  group_by(parent_id) %>% 
+  summarise(mean = mean(tn_percent),
+            sd = round(sd(tn_percent),3),
+            cv = round(sd/mean,3))
+
+reps_n_by_site %>% 
+  ggplot(aes(x = cv))+
+  geom_histogram()
 
