@@ -117,7 +117,7 @@ toc_samples2 %>% write.csv("processed/toc_eca_run2_2023-11-01.csv", row.names = 
 toc_run3 = read.csv("toc_data/2023-02-21-stegen_eca_run1-v3.csv") %>% 
   janitor::clean_names()
 
-toc_run4 = read.csv("toc_data/2023-11-07_stegen_eca_part2.csv") %>% 
+toc_run4 = read.csv("toc_data/2023-11-07_stegen_eca_part2-v3.csv") %>% 
   janitor::clean_names()
 
 ## process toc data of batch 2 ----
@@ -250,11 +250,21 @@ reps_n_analytical %>%
   ggplot(aes(x = cv))+
   geom_histogram()
 
+reps_n_analytical %>% 
+  ggplot(aes(x = cv, y = mean))+
+  geom_point()
+
+reps_n_analytical %>% 
+  filter(cv > 0.16) %>% 
+  ggplot(aes(x = cv, y = mean))+
+  geom_point()
+
+
 
 ### 3. aspartics/standards ----
 aspartics = 
   full_processed_toc %>% 
-  filter(grepl("aspartic", name))
+  filter(name == "aspartic")
 
 aspartics %>% 
   filter(weight_mg > 0.4 & weight_mg < 0.65) %>% 
