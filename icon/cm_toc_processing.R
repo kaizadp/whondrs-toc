@@ -15,7 +15,7 @@ library(viridis)
 
 #ICON RUN --------------------------------------------------------------
 
-toc_cm = read.csv("toc/2024-02-16-sm-cm.csv") %>% 
+toc_cm = read.csv("toc/2024-02-16-sm-cm-v2.csv") %>% 
   janitor::clean_names() %>% 
   filter(!grepl("2/23/2024|2/26/2024", date_time))
 
