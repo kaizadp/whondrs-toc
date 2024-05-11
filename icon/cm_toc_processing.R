@@ -130,6 +130,10 @@ reps_n_analytical %>%
   ggplot(aes(x = cv))+
   geom_histogram()
 
+reps_n_analytical %>% 
+  ggplot(aes(x = cv, y = mean))+
+  geom_point()
+
 
 ### 3. aspartics/standards ----
 aspartics = 
@@ -172,6 +176,84 @@ reps_n_by_site =
 reps_n_by_site %>% 
   ggplot(aes(x = cv))+
   geom_histogram()
+
+
+### 5. acid vs no acid test run ----
+#pulling in data for test run that included analytical reps acidified and non acidified to see if TN values differ
+
+test_cm = read.csv("toc/2024-02-16-sm-cm-v3.csv") %>% 
+  janitor::clean_names() %>% 
+  filter(grepl("4/29/2024|5/1/2024|5/2/2024", date_time))
+
+test_processed = 
+  test_cm %>% 
+  rename(n_percent = n,
+         c_percent = c) %>% 
+  dplyr::select(info, name, weight_mg, 
+                n_area, n_percent, n_factor, 
+                c_area, c_percent, c_factor, 
+                memo) %>% 
+  # remove samples with oxygen breakthrough ("bl") - these have been repeated
+  #filter(!info %in% "bl") %>% 
+  #filter(!memo %in% "skip") %>% 
+  force()
+
+test_blanks = 
+  test_processed %>% 
+  dplyr::select(name, c_area, c_percent, n_area, n_percent, memo) %>% 
+  filter(grepl("MT", name, ignore.case = TRUE)) 
+
+
+
+test_c_analytical = 
+  test_processed %>% 
+  dplyr::select(name, c_percent) %>% 
+  filter(grepl("CM", name)) %>% 
+  mutate(name = str_remove(name, "-rep")) %>% 
+  rename(rep = c_percent) 
+
+test_c_analytical$extracted_name <- gsub("\\d$", "", test_c_analytical$name) 
+
+test_c_data =
+  test_c_analytical %>% 
+  dplyr::select(extracted_name, rep) %>% 
+  group_by(extracted_name) %>% 
+  mutate(mean = mean(c(rep),3),
+         sd = round(sd(c(rep)),3),
+         cv = round(sd/mean,3))
+
+
+test_n_analytical = 
+  test_processed %>% 
+  dplyr::select(name, n_percent) %>% 
+  filter(grepl("CM", name)) %>% 
+  mutate(name = str_remove(name, "-rep")) %>% 
+  rename(rep = n_percent) 
+
+test_n_analytical$extracted_name <- gsub("\\d$", "", test_n_analytical$name) 
+
+test_n_data =
+  test_n_analytical %>% 
+  dplyr::select(extracted_name, rep) %>% 
+  group_by(extracted_name) %>% 
+  mutate(mean = mean(c(rep), 3),
+         sd = round(sd(c(rep)),3),
+         cv = round(sd/mean,3))
+
+test_c_data %>% 
+  ggplot(aes(x = cv))+
+  geom_histogram()
+
+test_n_data %>% 
+  ggplot(aes(x = cv))+
+  geom_histogram()
+
+test_n_data %>% 
+  ggplot(aes(x = cv, y = mean, color = extracted_name))+
+  geom_point()
+
+test_n_data %>% write.csv("C:/GitHub/s19s/icon/tn_test_data.csv", row.names = F)
+
 
 # Maggi Dist Matrix  --------------------------------------------------------------
 
