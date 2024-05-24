@@ -17,7 +17,7 @@ library(viridis)
 
 toc_cm = read.csv("toc/2024-02-16-sm-cm-v2.csv") %>% 
   janitor::clean_names() %>% 
-  filter(!grepl("2/23/2024|2/26/2024", date_time))
+  filter(!grepl("2/23/2024|2/26/2024|4/5/2024", date_time))
 
 mapping = read_xlsx("C:/Users/guil098/OneDrive - PNNL/Data Generation and Files/ICON_ModEx_SSS/08_CN/01_RawData/20230524_Data_Raw_SCN_SBR_RC4_CM_R1-89/20230524_Mapping_Raw_SCN_SBR_RC4_CM_R1-129.xlsx") %>% 
   janitor::clean_names() %>% 
@@ -191,7 +191,7 @@ test_processed =
          c_percent = c) %>% 
   dplyr::select(info, name, weight_mg, 
                 n_area, n_percent, n_factor, 
-                c_area, c_percent, c_factor, 
+                c_area, c_percent, c_factor, c_n_ratio,
                 memo) %>% 
   # remove samples with oxygen breakthrough ("bl") - these have been repeated
   #filter(!info %in% "bl") %>% 
@@ -343,12 +343,12 @@ toc_final_flag <- toc_final %>%
 
 ## Joined to see what sample is being removed
 
-toc_merged_removals <- left_join(outliers, toc_final_flag, by = c("Sample_ID", "Randomized_ID", "tn_percent", "parent_id", "mean_toc_all", "cv_toc_all")) %>% 
+toc_merged_removals <- left_join(outliers, toc_final_flag, by = c("sample_id", "randomized_id", "tn_percent", "parent_id", "mean_toc_all", "cv_toc_all")) %>% 
   mutate(flag_removal = if_else(is.na(toc_percent.y), "Outlier to remove", "N/A")) %>% 
-  left_join(toc_samples, by = c("Sample_ID", "Randomized_ID", "tn_percent", "parent_id")) %>% 
+  left_join(toc_samples, by = c("sample_id", "randomized_id", "tn_percent", "parent_id")) %>% 
   mutate(toc_percent = ifelse(flag_removal == "Outlier to remove", "N/A", toc_percent.x)) %>% 
   select(-c(flag.x, flag.y, toc_percent.x, toc_percent.y)) %>% 
-  relocate(toc_percent, .after = Sample_ID)
+  relocate(toc_percent, .after = sample_id)
 
 
 clean_replicates <- 
@@ -387,7 +387,7 @@ toc_dp <- toc_final_samples %>%
          Methods_Deviation = Method_Deviation) 
   
 #formatted for data package file 
-toc_dp %>% write.csv("C:/Users/guil098/OneDrive - PNNL/Data Generation and Files/ICON_ModEx_SSS/08_CN/02_FormattedData/SSS_CN_ReadyForBoye_01-12-2024.csv", row.names = F)  
+toc_dp %>% write.csv("C:/Users/guil098/OneDrive - PNNL/Data Generation and Files/ICON_ModEx_SSS/08_CN/02_FormattedData/CM_CN_ReadyForBoye_05-23-2024.csv", row.names = F)  
   
   
   

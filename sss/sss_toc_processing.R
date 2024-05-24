@@ -337,18 +337,17 @@ toc_dp <- toc_final_samples %>%
 toc_dp %>% write.csv("C:/Users/guil098/OneDrive - PNNL/Data Generation and Files/ICON_ModEx_SSS/08_CN/02_FormattedData/SSS_CN_ReadyForBoye_01-12-2024.csv", row.names = F)  
   
   
-  
-  
-  
-  
+
   
 
+sss_final <- read.csv("C:/Users/guil098/OneDrive - PNNL/Data Generation and Files/ICON_ModEx_SSS/08_CN/02_FormattedData/SSS_CN_ReadyForBoye_01-12-2024.csv")
 
 
 
 
-
-
+sss_final %>% 
+  ggplot(aes(x = X01397_N_percent_per_mg))+
+  geom_histogram()
 
 
 
