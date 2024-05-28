@@ -11,7 +11,7 @@ library(tidyverse)
 library(readxl)
 library(viridis)
 
-
+#setwd("C:/GitHub/s19s/icon")
 
 #ICON RUN --------------------------------------------------------------
 
@@ -20,6 +20,7 @@ toc_cm = read.csv("toc/2024-02-16-sm-cm-v2.csv") %>%
   filter(!grepl("2/23/2024|2/26/2024|4/5/2024", date_time))
 
 mapping = read_xlsx("C:/Users/guil098/OneDrive - PNNL/Data Generation and Files/ICON_ModEx_SSS/08_CN/01_RawData/20230524_Data_Raw_SCN_SBR_RC4_CM_R1-89/20230524_Mapping_Raw_SCN_SBR_RC4_CM_R1-129.xlsx") %>% 
+  #read_xlsx("C:/Users/laan208/PNNL/Core Richland and Sequim Lab-Field Team - Documents/Data Generation and Files/ICON_ModEx_SSS/08_CN/01_RawData/20230524_Data_Raw_SCN_SBR_RC4_CM_R1-89/20230524_Mapping_Raw_SCN_SBR_RC4_CM_R1-129.xlsx") %>% 
   janitor::clean_names() %>% 
   mutate(parent_id = str_extract(sample_id, ".{6}(?=_)")) %>% 
   filter(!is.na(sample_id))
@@ -321,7 +322,7 @@ for (i in 1:length(unique.samples)) {
     
     toc.removed <- merge(toc.combined, data_subset, by.x = "toc.temp", by.y = "toc_percent", all.x = TRUE)
     
-    toc.removed <- toc.removed[!duplicated(toc.removed$Sample_ID), ]
+    toc.removed <- toc.removed[!duplicated(toc.removed$sample_id), ]
     
     toc.removed$cv_toc_rem = as.numeric(abs((sd(toc.temp)/mean(toc.temp))*100))
     
