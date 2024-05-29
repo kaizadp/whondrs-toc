@@ -123,7 +123,7 @@ toc_run4 = read.csv("toc_data/2023-11-07_stegen_eca_part2-v4.csv") %>%
 
 full_toc <- bind_rows(toc_run3, toc_run4)
 
-## process toc data of batch 2 ----
+## process toc data of total run ----
 toc_processed = 
   full_toc %>% 
   rename(n_percent = n,
@@ -162,7 +162,16 @@ toc_mapping <-
   filter(!is.na(Percent)) %>%
   filter(!is.na(sample_id)) %>% 
   pivot_wider(names_from = Parameter,
-              values_from = Percent)
+              values_from = Percent) %>% 
+  filter(!grepl("-rep", sample_id))
+
+
+toc_mapping %>% 
+  write.csv("C:/Users/guil098/OneDrive - PNNL/Data Generation and Files/ECA/CN/02_FormattedData/ECA_CN_05-23-2024.csv", row.names = F)  
+
+
+
+
 
 # QAQC --------------------------------------------------------------
 full_processed_toc <- bind_rows(toc_processed3, toc_processed4)
