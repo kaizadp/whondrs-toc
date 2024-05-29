@@ -368,11 +368,8 @@ clean_replicates <-
 toc_final_samples <- 
   rbind(clean_replicates, toc_samples_singles)
 
+
 toc_final_samples$parent_id <- paste0(toc_final_samples$parent_id,"_SCN")
-
-
-
-
 
 
 #Data Package ----
@@ -388,7 +385,7 @@ toc_dp <- toc_final_samples %>%
          Methods_Deviation = Method_Deviation) 
   
 #formatted for data package file 
-toc_dp %>% write.csv("C:/Users/guil098/OneDrive - PNNL/Data Generation and Files/ICON_ModEx_SSS/08_CN/02_FormattedData/CM_CN_ReadyForBoye_05-23-2024.csv", row.names = F)  
+toc_dp %>% write.csv("C:/Users/guil098/OneDrive - PNNL/Data Generation and Files/ICON_ModEx_SSS/08_CN/02_FormattedData/CM_CN_ReadyForBoye_05-28-2024.csv", row.names = F)  
   
   
   
