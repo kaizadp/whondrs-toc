@@ -18,7 +18,8 @@ b1_mapping <- read_xlsx("C:/Users/guil098/OneDrive - PNNL/Data Generation and Fi
   mutate(parent_id = str_extract(sample_id, "[:digit:]+(?=_)"),
          parent_id = case_when(nchar(parent_id) ==3 ~ parent_id, 
                                nchar(parent_id) ==2 ~ str_c(0, parent_id)),
-         parent_id = paste0("EC_", parent_id)) %>% 
+         parent_id = paste0("EC_", parent_id),
+         sample_id = str_replace(sample_id, "EC_", "EC_0")) %>% 
   filter(!is.na(sample_id),
          !grepl("Ran in EMSL", cn_notes))
 
@@ -29,6 +30,13 @@ b2_mapping <- read_xlsx("C:/Users/guil098/OneDrive - PNNL/Data Generation and Fi
 
 full_mapping <- bind_rows(b1_mapping, b2_mapping) %>% 
   filter(!grepl("skip", cn_notes))
+
+
+shipping_mapping <- read.csv("EC Sample Tracking-SCN.csv") %>% 
+  janitor::clean_names() %>% 
+  filter(eca_protocol_from_kit_id %in% "Protocol 2 (Amber vials)") %>% 
+  select(sample_name, notes) %>% 
+  rename(sample_id = sample_name)
 
 # RUN-1 ONLY --------------------------------------------------------------
 ## running just one replicate from each set for a general understanding of C values
@@ -163,14 +171,20 @@ toc_mapping <-
   filter(!is.na(sample_id)) %>% 
   pivot_wider(names_from = Parameter,
               values_from = Percent) %>% 
-  filter(!grepl("-rep", sample_id))
+  filter(!grepl("-rep", sample_id)) %>% 
+  full_join(shipping_mapping) %>% 
+  rename(Method_Notes = notes) %>% 
+  mutate(Method_Deviation = case_when(is.na(toc_percent) ~ "flag", 
+                                      !is.na(toc_percent) ~ "N/A"))
 
 
 toc_mapping %>% 
-  write.csv("C:/Users/guil098/OneDrive - PNNL/Data Generation and Files/ECA/CN/02_FormattedData/ECA_CN_05-23-2024.csv", row.names = F)  
-
-
-
+  select(sample_id, parent_id, toc_percent, tn_percent, Method_Deviation) %>% 
+  mutate(Material = "Sediment") %>% 
+  relocate(Material, .after = parent_id) %>% 
+  rename('01395_C_percent_per_mg' = toc_percent,
+         '01397_N_percent_per_mg' = tn_percent) %>% 
+  write.csv("C:/Users/guil098/OneDrive - PNNL/Data Generation and Files/ECA/CN/02_FormattedData/ECA_CN_ReadyForBoye_06-11-2024.csv", row.names = F)  
 
 
 # QAQC --------------------------------------------------------------
@@ -180,7 +194,7 @@ full_processed_toc <- bind_rows(toc_processed3, toc_processed4)
 blanks = 
   full_processed_toc %>% 
   dplyr::select(name, c_area, c_percent, n_area, n_percent, memo) %>% 
-  filter(grepl("MT", name, ignore.case = TRUE)) 
+  filter(grepl("MT", name, ignore.case = TRUE))
 
 # blanks for C
 blanks %>% 
