@@ -1,0 +1,84 @@
+﻿#Columns,5,,,,
+#Header_Rows,12,,,,
+Field_Name,Sample_Name,Material,01472_N_percent,01463_C_percent,Methods_Deviation
+Unit,N/A,N/A,percent,percent,N/A
+Unit_Basis,N/A,N/A,as_percent_Nitrogen_dry_weight,as_percent_Carbon_dry_weight,N/A
+MethodID_Analysis,N/A,N/A,CN_T_AN_002,CN_T_AN_002,N/A
+MethodID_Inspection,N/A,N/A,CN_T_IN_002,CN_T_IN_002,N/A
+MethodID_Storage,N/A,N/A,CN_T_ST_002,CN_T_ST_002,N/A
+MethodID_Preservation,N/A,N/A,CN_T_PRES_002,CN_T_PRES_002,N/A
+MethodID_Preparation,N/A,N/A,CN_T_PREP_002,CN_T_PREP_002,N/A
+MethodID_DataProcessing,N/A,N/A,CN_T_DP_002,CN_T_DP_002,N/A
+Analysis_DetectionLimit,-9999,-9999,-9999,-9999,N/A
+Analysis_Precision,-9999,-9999,-9999,-9999,N/A
+Data_Status,N/A,N/A,ready_to_use,ready_to_use,N/A
+#Start_Data,BSLE_0001-solid,Organic Material,0.82,23.2,N/A
+N/A,BSLE_0002-solid,Organic Material,0.6,26.14,N/A
+N/A,BSLE_0003-solid,Organic Material,1.09,36.43,N/A
+N/A,BSLE_0004-solid,Organic Material,0.92,38.61,N/A
+N/A,BSLE_0005-solid,Organic Material,1.09,35.99,N/A
+N/A,BSLE_0006-solid,Organic Material,1.09,34.94,N/A
+N/A,BSLE_0007-solid,Organic Material,0.47,19.4,N/A
+N/A,BSLE_0008-solid,Organic Material,0.53,25.45,N/A
+N/A,BSLE_0009-solid,Organic Material,0.99,21.36,N/A
+N/A,BSLE_0010-solid,Organic Material,0.26,12.81,N/A
+N/A,BSLE_0011-solid,Organic Material,0.88,18.8,N/A
+N/A,BSLE_0012-solid,Organic Material,1.31,34.82,N/A
+N/A,BSLE_0013-solid,Organic Material,0.9,33.19,N/A
+N/A,BSLE_0014-solid,Organic Material,0.84,34.19,N/A
+N/A,BSLE_0016-solid,Organic Material,0.99,31.32,N/A
+N/A,BSLE_0017-solid,Organic Material,0.86,29.43,N/A
+N/A,BSLE_0018-solid,Organic Material,0.89,25.31,N/A
+N/A,BSLE_0019-solid,Organic Material,1.31,22.62,N/A
+N/A,BSLE_0020-solid,Organic Material,0.91,28.27,N/A
+N/A,BSLE_0021-solid,Organic Material,1.13,27.12,N/A
+N/A,BSLE_0022-solid,Organic Material,0.9,31.65,N/A
+N/A,BSLE_0023-solid,Organic Material,0.79,22.76,N/A
+N/A,BSLE_0024-solid,Organic Material,0.77,30.38,N/A
+N/A,BSLE_0025-solid,Organic Material,0.73,19.23,N/A
+N/A,BSLE_0026-solid,Organic Material,0.62,20.42,N/A
+N/A,BSLE_0027-solid,Organic Material,0.99,31.94,N/A
+N/A,BSLE_0028-solid,Organic Material,0.55,21.38,N/A
+N/A,BSLE_0029-solid,Organic Material,0.21,7.15,N/A
+N/A,BSLE_0030-solid,Organic Material,0.55,19.32,N/A
+N/A,BSLE_0031-solid,Organic Material,0.86,23.29,N/A
+N/A,BSLE_0032-solid,Organic Material,0.77,23.22,N/A
+N/A,BSLE_0033-solid,Organic Material,0.88,29.81,N/A
+N/A,BSLE_0034-solid,Organic Material,0.82,29.69,N/A
+N/A,BSLE_0035-solid,Organic Material,1.02,30.49,N/A
+N/A,BSLE_0036-solid,Organic Material,1.09,31.45,N/A
+N/A,BSLE_0037-solid,Organic Material,0.49,14.62,N/A
+N/A,BSLE_0038-solid,Organic Material,0.53,11.73,N/A
+N/A,BSLE_0039-solid,Organic Material,1.09,38.22,N/A
+N/A,BSLE_0040-solid,Organic Material,1.13,36,N/A
+N/A,BSLE_0041-solid,Organic Material,1.09,35.96,N/A
+N/A,BSLE_0042-solid,Organic Material,1.07,34.13,N/A
+N/A,BSLE_0043-solid,Organic Material,0.99,34.6,N/A
+N/A,BSLE_0044-solid,Organic Material,0.89,32.67,N/A
+N/A,BSLE_0045-solid,Organic Material,0.91,33.66,N/A
+N/A,BSLE_0046-solid,Organic Material,0.7,33.33,N/A
+N/A,BSLE_0047-solid,Organic Material,0.98,34.32,N/A
+N/A,BSLE_0050-solid,Organic Material,0.51,11.1,N/A
+N/A,BSLE_0051-solid,Organic Material,0.41,9.23,N/A
+N/A,BSLE_0052-solid,Organic Material,0.7,16.09,N/A
+N/A,BSLE_0055-solid,Organic Material,0.47,13.11,N/A
+N/A,BSLE_0056-solid,Organic Material,0.65,19.69,N/A
+N/A,BSLE_0057-solid,Organic Material,1.05,16.33,N/A
+N/A,BSLE_0058-solid,Organic Material,0.34,6.11,N/A
+N/A,BSLE_0060-solid,Organic Material,0.64,11.05,N/A
+N/A,BSLE_0061-solid,Organic Material,0.24,9.53,N/A
+N/A,BSLE_0063-solid,Organic Material,0.41,12.14,N/A
+N/A,BSLE_0065-solid,Organic Material,0.25,8.19,N/A
+N/A,BSLE_0066-solid,Organic Material,0.29,8.71,N/A
+N/A,BSLE_0067-solid,Organic Material,0.27,9.36,N/A
+N/A,BSLE_0068-solid,Organic Material,0.6,13.4,N/A
+N/A,BSLE_0070-solid,Organic Material,0.45,19.04,N/A
+N/A,BSLE_0071-solid,Organic Material,0.36,11.57,N/A
+N/A,BSLE_0072-solid,Organic Material,0.46,17.59,N/A
+N/A,BSLE_0073-solid,Organic Material,0.91,19.69,N/A
+N/A,BSLE_0079-solid,Organic Material,0.59,13.03,N/A
+N/A,BSLE_0083-solid,Organic Material,0.68,15.17,N/A
+N/A,BSLE_0084-solid,Organic Material,0.4,11.82,N/A
+N/A,BSLE_0085-solid,Organic Material,0.47,11.04,N/A
+N/A,BSLE_0086-solid,Organic Material,0.36,13.8,N/A
+#End_Data,,,,,
